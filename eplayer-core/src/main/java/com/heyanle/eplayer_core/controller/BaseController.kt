@@ -437,7 +437,7 @@ open class BaseController:
     override fun show() {
         if(!mIsShowing){
             startFadeOut()
-            handleVisibilityChanged(true, mHideAnim)
+            handleVisibilityChanged(true, mShowAnim)
             mIsShowing = true
         }
     }
