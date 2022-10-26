@@ -102,7 +102,7 @@ open class BaseController:
     // == BaseController 本身对外的 api，有些是代理方法
 
     // 绑定统一的 播放控制器 接口
-    open fun attachToPlayer(playerController: IPlayer){
+    override fun attachToPlayer(playerController: IPlayer){
         val container = ComponentContainer(this, playerController)
         componentContainer = container
         runWithAllComponents {
@@ -110,16 +110,16 @@ open class BaseController:
         }
     }
 
-    open fun togglePlay(){
+    override fun togglePlay(){
         componentContainer?.togglePlay()
     }
 
-    open fun toggleFullScreen(){
+    override fun toggleFullScreen(){
         val act = activity?.get()?:return
         componentContainer?.toggleFullScreen(act)
     }
 
-    open fun startFullScreen(){
+    override fun startFullScreen(){
         val act = activity?.get()?:return
         if(act.isFinishing) return
         act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -127,7 +127,7 @@ open class BaseController:
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
-    open fun stopFullScreen(){
+    override fun stopFullScreen(){
         val act = activity?.get()?:return
         if(act.isFinishing) return
         act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -136,18 +136,18 @@ open class BaseController:
 
     // == 播放器状态和播放状态的改变事件分发 ==
 
-    open fun dispatchPlayStateChange(playState: Int) {
+    override fun dispatchPlayStateChange(playState: Int) {
         handlePlayStateChanged(playState)
     }
 
 
-    open fun dispatchPlayerStateChange(playerState: Int) {
+    override fun dispatchPlayerStateChange(playerState: Int) {
         handlePlayerStateChanged(playerState)
     }
 
     // 返回按钮监听，递归使用
 
-    open fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         return false
     }
 

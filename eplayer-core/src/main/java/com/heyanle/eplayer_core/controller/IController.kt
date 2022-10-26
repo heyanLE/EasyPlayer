@@ -1,6 +1,7 @@
 package com.heyanle.eplayer_core.controller
 
 import android.view.ViewGroup
+import com.heyanle.eplayer_core.player.IPlayer
 import com.heyanle.eplayer_core.player.IPlayerEngine
 
 /**
@@ -8,6 +9,47 @@ import com.heyanle.eplayer_core.player.IPlayerEngine
  * Create by heyanlin on 2022/10/25
  */
 interface IController {
+
+    /**
+     * 绑定 IPlayer
+     */
+    fun attachToPlayer(playerController: IPlayer)
+
+    /**
+     * 暂停/播放
+     */
+    fun togglePlay()
+
+    /**
+     * 全屏/非全屏
+     */
+    fun toggleFullScreen()
+
+    /**
+     * 全屏
+     */
+    fun startFullScreen()
+
+    /**
+     * 取消全屏
+     */
+    fun stopFullScreen()
+
+    /**
+     * 分发播放状态改变事件
+     */
+    fun dispatchPlayStateChange(playState: Int)
+
+    /**
+     * 分发播放器状态改变事件
+     */
+    fun dispatchPlayerStateChange(playerState: Int)
+
+    /**
+     * 分发返回按钮点击事件
+     */
+    fun onBackPressed(): Boolean
+
 
     fun startFadeOut()
 
