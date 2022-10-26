@@ -4,7 +4,7 @@ import android.view.ViewGroup
 import com.heyanle.eplayer_core.player.IPlayerEngine
 
 /**
- * Component 的容器
+ * 控制器接口
  * Create by heyanlin on 2022/10/25
  */
 interface IController {
