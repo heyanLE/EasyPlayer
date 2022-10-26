@@ -110,16 +110,16 @@ open class BaseController:
         }
     }
 
-    override fun togglePlay(){
+    open fun togglePlay(){
         componentContainer?.togglePlay()
     }
 
-    override fun toggleFullScreen(){
+    open fun toggleFullScreen(){
         val act = activity?.get()?:return
         componentContainer?.toggleFullScreen(act)
     }
 
-    override fun startFullScreen(){
+    open fun startFullScreen(){
         val act = activity?.get()?:return
         if(act.isFinishing) return
         act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -127,7 +127,7 @@ open class BaseController:
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
-    override fun stopFullScreen(){
+    open fun stopFullScreen(){
         val act = activity?.get()?:return
         if(act.isFinishing) return
         act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -227,7 +227,7 @@ open class BaseController:
     // == Component 管理 =============================================
 
     // 注册 子 View 组件，在 onFinishInflate 调用
-    private fun adComponentsByChildren(){
+    private fun addComponentsByChildren(){
         for(i in 0 until childCount){
             val v = (getChildAt(i) as? IComponentGetter)?:continue
             // 虽然传入 true，但是会触发安全检查，
@@ -454,7 +454,7 @@ open class BaseController:
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        adComponentsByChildren()
+        addComponentsByChildren()
     }
 
     // 全屏时焦点处理
