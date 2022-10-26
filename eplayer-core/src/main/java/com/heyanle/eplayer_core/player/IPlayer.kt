@@ -40,13 +40,13 @@ interface IPlayer {
 
     fun replay(resetPosition: Boolean)
 
-    fun setMirrorRotation(enable: Boolean): Boolean
+    fun setMirrorRotation(enable: Boolean)
 
     fun doScreenShot(): Bitmap?
 
     fun getVideoSize(): IntArray
 
-    fun setRotation(rotation: Float): Boolean
+    fun setPlayerRotation(rotation: Float)
 
     fun startTinyScreen(): Boolean
 

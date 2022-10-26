@@ -11,7 +11,9 @@ import com.heyanle.eplayer_core.player.IPlayerEngine
  */
 interface IRender {
 
-    fun attachToPlayer(player: IPlayerEngine)
+    fun detachPlayerEngine(player: IPlayerEngine)
+
+    fun attachToPlayerEngine(player: IPlayerEngine)
 
     fun setVideoSize(width: Int, height: Int)
 

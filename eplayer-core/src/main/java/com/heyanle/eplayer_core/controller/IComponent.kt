@@ -8,7 +8,7 @@ import android.widget.RelativeLayout
  * 组件，注册给 Controller
  * Create by heyanlin on 2022/10/25
  */
-interface IComponent {
+interface IComponent: IComponentGetter {
 
     fun onPlayerStateChanged(playerState: Int)
 
@@ -34,5 +34,9 @@ interface IComponent {
      * 移除时调用，建议在该方法里将 Container 对象置空，防止内存泄漏
      */
     fun onRemove()
+
+    override fun getComponent(): IComponent {
+        return this
+    }
 
 }

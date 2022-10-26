@@ -8,12 +8,17 @@ import com.heyanle.eplayer_core.player.IPlayerEngine
  * 控制器接口
  * Create by heyanlin on 2022/10/25
  */
-interface IController {
+interface IController: IControllerGetter {
 
     /**
      * 绑定 IPlayer
      */
     fun attachToPlayer(playerController: IPlayer)
+
+    /**
+     * 解绑 IPlayer
+     */
+    fun detachPlayer(iPlayer: IPlayer)
 
     /**
      * 分发播放状态改变事件
@@ -93,5 +98,9 @@ interface IController {
      * 移除所有组件
      */
     fun removeAllComponents()
+
+    override fun getController(): IController {
+        return this
+    }
 
 }

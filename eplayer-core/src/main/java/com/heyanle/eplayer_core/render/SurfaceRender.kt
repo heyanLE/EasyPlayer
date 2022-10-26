@@ -24,7 +24,11 @@ class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
         holder.setFormat(PixelFormat.RGBA_8888)
     }
 
-    override fun attachToPlayer(player: IPlayerEngine) {
+    override fun detachPlayerEngine(player: IPlayerEngine) {
+        this.easyPlayer = null
+    }
+
+    override fun attachToPlayerEngine(player: IPlayerEngine) {
         this.easyPlayer = player
     }
 

@@ -2,6 +2,7 @@ package com.heyanle.lib.render
 
 import android.content.Context
 import com.heyanle.eplayer_core.render.IRender
+import com.heyanle.eplayer_core.render.IRenderFactory
 import com.heyanle.eplayer_core.render.SurfaceRender
 
 /**
