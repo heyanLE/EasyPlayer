@@ -110,19 +110,26 @@ open class BaseController:
         }
     }
 
+    override fun detachPlayer(iPlayer: IPlayer) {
+
+        componentContainer?.let {
+            runWithAllComponents {
+                onDetachToContainer(it)
+            }
+        }
+
+        componentContainer = null
+    }
+
     open fun togglePlay(){
         componentContainer?.togglePlay()
     }
 
     open fun toggleFullScreen(){
-        val act = activity?.get()?:return
-        componentContainer?.toggleFullScreen(act)
+        componentContainer?.toggleFullScreen()
     }
 
     open fun startFullScreen(){
-        val act = activity?.get()?:return
-        if(act.isFinishing) return
-        act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         componentContainer?.startFullScreen()
     }
 
@@ -229,10 +236,12 @@ open class BaseController:
     // 注册 子 View 组件，在 onFinishInflate 调用
     private fun addComponentsByChildren(){
         for(i in 0 until childCount){
-            val v = (getChildAt(i) as? IComponentGetter)?:continue
+            val v = getChildAt(i)
+            val cg = (v as? IComponentGetter)?:continue
+            removeView(v)
             // 虽然传入 true，但是会触发安全检查，
             // 不会最终 add view，但是在 remove 时会 remove
-            addComponents(true, v.getComponent())
+            addComponents(true, cg.getComponent())
         }
     }
 

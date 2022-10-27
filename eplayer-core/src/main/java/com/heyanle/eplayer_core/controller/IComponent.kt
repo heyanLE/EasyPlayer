@@ -30,6 +30,8 @@ interface IComponent: IComponentGetter {
      */
     fun onAttachToContainer(controller: ComponentContainer)
 
+    fun onDetachToContainer(controller: ComponentContainer)
+
     /**
      * 移除时调用，建议在该方法里将 Container 对象置空，防止内存泄漏
      */

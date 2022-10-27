@@ -1,11 +1,15 @@
 package com.heyanle.eplayer_core.easy_player
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.WindowInsetsControllerCompat
 import com.heyanle.eplayer_core.EasyPlayerManager
 import com.heyanle.eplayer_core.constant.EasyPlayStatus
 import com.heyanle.eplayer_core.constant.EasyPlayerStatus
@@ -15,7 +19,13 @@ import com.heyanle.eplayer_core.controller.IControllerGetter
 import com.heyanle.eplayer_core.player.IPlayer
 import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.player.IPlayerEngineFactory
+import com.heyanle.eplayer_core.player.PlayerEngineViewConfig
 import com.heyanle.eplayer_core.render.IRenderFactory
+import com.heyanle.eplayer_core.render.RenderViewConfig
+import com.heyanle.eplayer_core.utils.ActivityScreenHelper
+import com.heyanle.eplayer_core.utils.MediaHelper
+import com.heyanle.eplayer_core.utils.PlayUtils
+import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -29,6 +39,11 @@ open class BaseEasyPlayerView:
     IPlayer,
     IPlayerEngine.EventListener
 {
+
+    // activity 对象，使用弱引用
+    private var act: WeakReference<Activity?> = WeakReference(null)
+
+    private val realViewContainer = FrameLayout(context)
 
     private val renderContainer = FrameLayout(context)
 
@@ -56,6 +71,16 @@ open class BaseEasyPlayerView:
     private var mIsMute: Boolean = false
     private var mCurrentScaleType: Int = EasyPlayerManager.screenScaleType
 
+    protected var mVideoSize = intArrayOf(0, 0)
+
+    private var mIsFullScreen = false
+
+    init {
+        addView(realViewContainer, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
+        realViewContainer.addView(renderContainer, 0, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
+
+    }
+
     // == Controller 管理和 事件分发 ============
 
     fun addController(isAddToParent: Boolean = true, vararg controller: IController){
@@ -64,7 +89,7 @@ open class BaseEasyPlayerView:
                 controllers.add(c)
                 c.attachToPlayer(this)
                 if(isAddToParent){
-                    addView(c.getViewContainer())
+                    realViewContainer.addView(c.getViewContainer())
                 }
             }
         }
@@ -75,7 +100,7 @@ open class BaseEasyPlayerView:
             for(c in controller){
                 controllers.remove(c)
                 c.detachPlayer(this)
-                removeView(c.getViewContainer())
+                realViewContainer.removeView(c.getViewContainer())
             }
         }
     }
@@ -167,15 +192,54 @@ open class BaseEasyPlayerView:
     }
 
     override fun startFullScreen() {
+        if(mIsFullScreen){
+            return
+        }
+        runWithEnvironmentIfNotNull {
+            val activity = act.get()?: return
+            val decorView = (activity.window.decorView as? ViewGroup)?: return
+            mIsFullScreen = true
+            // 隐藏状态栏和虚拟按键
+            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
 
+            // 横屏
+            ActivityScreenHelper.activityScreenOrientationLandscape(activity)
+
+            // 移除视图
+            removeView(realViewContainer)
+
+            // 添加 decorView
+            decorView.addView(realViewContainer)
+
+            // 分发事件
+            dispatchPlayerStateChange(EasyPlayerStatus.PLAYER_FULL_SCREEN)
+        }
     }
 
     override fun stopFullScreen() {
-        TODO("Not yet implemented")
+        val activity = act.get()?: return
+        val decorView = (activity.window.decorView as? ViewGroup)?: return
+        mIsFullScreen = false
+
+        // 展示状态栏和虚拟按钮
+        MediaHelper.setIsSystemBarsShow(activity, true)
+
+        // 竖屏
+        ActivityScreenHelper.activityScreenOrientationPortrait(activity)
+
+        // 从  decorView 中移除
+        decorView.removeView(realViewContainer)
+
+        // 添加到自身
+        addView(realViewContainer)
+
+        // 分发事件
+        dispatchPlayerStateChange(EasyPlayerStatus.PLAYER_NORMAL)
+
     }
 
     override fun isFullScreen(): Boolean {
-        TODO("Not yet implemented")
+        return mIsFullScreen
     }
 
     override fun setMute(isMute: Boolean) {
@@ -236,7 +300,7 @@ open class BaseEasyPlayerView:
     }
 
     override fun getVideoSize(): IntArray {
-        TODO("Not yet implemented")
+        return mVideoSize
     }
 
     override fun setPlayerRotation(rotation: Float) {
@@ -246,7 +310,8 @@ open class BaseEasyPlayerView:
     }
 
     override fun startTinyScreen(): Boolean {
-
+        // TODO 之后支持
+        return false
     }
 
     override fun stopTinyScreen() {
@@ -254,7 +319,7 @@ open class BaseEasyPlayerView:
     }
 
     override fun isTinyScreen(): Boolean {
-
+        return false
     }
 
     // == override IPlayer.Listener =================
@@ -276,7 +341,13 @@ open class BaseEasyPlayerView:
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
+        mVideoSize[0] = width
+        mVideoSize[1] = height
 
+        runWithEnvironmentIfNotNull {
+            render.setScaleType(mCurrentScaleType)
+            render.setVideoSize(width, height)
+        }
     }
 
     override fun onOtherPlayerEvent(event: Int, vararg args: Any) {
@@ -392,16 +463,17 @@ open class BaseEasyPlayerView:
     private fun findEnvironmentAndControllerFromChildren(){
         for(i in 0 until childCount){
             when(val v = getChildAt(i)){
-                is IPlayerEngineFactory -> {
-                    environmentBuilder.playerEngineFactory = v
+                is PlayerEngineViewConfig<*> -> {
+                    environmentBuilder.playerEngineFactory = v.getFactory()
                     removeView(v)
                 }
-                is IRenderFactory -> {
-                    environmentBuilder.renderFactory =  v
+                is RenderViewConfig<*> -> {
+                    environmentBuilder.renderFactory =  v.getFactory()
                     removeView(v)
                 }
                 is IControllerGetter -> {
-                    addController(false, v.getController())
+                    removeView(v)
+                    addController(true, v.getController())
                 }
             }
         }
@@ -426,6 +498,20 @@ open class BaseEasyPlayerView:
         findEnvironmentAndControllerFromChildren()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        PlayUtils.findActivity(context)?.let {
+            act = WeakReference(it)
+        }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if(hasWindowFocus && mIsFullScreen){
+            val activity = act.get()?:return
+            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
+        }
+    }
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)

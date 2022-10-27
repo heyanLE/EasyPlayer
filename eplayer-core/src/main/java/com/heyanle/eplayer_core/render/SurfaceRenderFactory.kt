@@ -1,4 +1,4 @@
-package com.heyanle.lib.render
+package com.heyanle.eplayer_core.render
 
 import android.content.Context
 import com.heyanle.eplayer_core.render.IRender
@@ -10,7 +10,8 @@ import com.heyanle.eplayer_core.render.SurfaceRender
  * https://github.com/heyanLE
  */
 class SurfaceRenderFactory: IRenderFactory {
-    override fun createRender(context: Context): IRender {
+
+    override fun invoke(context: Context): IRender {
         return SurfaceRender(context)
     }
 }

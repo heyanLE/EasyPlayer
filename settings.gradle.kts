@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "EasyPlayer"
 include(":app")
 include(":eplayer-core")
+include(":eplayer-exo")

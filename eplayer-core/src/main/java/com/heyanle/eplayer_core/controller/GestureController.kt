@@ -24,7 +24,7 @@ import kotlin.math.abs
  * 6. 长按倍速播放
  * Create by heyanlin on 2022/10/25
  */
-open class GestureContainer: BaseController,
+open class GestureController: BaseController,
     GestureDetector.OnGestureListener,
     GestureDetector.OnDoubleTapListener,
     View.OnTouchListener {

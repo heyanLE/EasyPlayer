@@ -22,16 +22,11 @@ class ComponentContainer(
         }
     }
 
-    @SuppressLint("SourceLockedOrientationActivity")
-    fun toggleFullScreen(activity: Activity){
-        if(activity.isFinishing){
-            return
-        }
+    fun toggleFullScreen(){
+        // 这里调用 IPlayer 的 api
         if(isFullScreen()){
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             stopFullScreen()
         }else{
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             startFullScreen()
         }
     }
