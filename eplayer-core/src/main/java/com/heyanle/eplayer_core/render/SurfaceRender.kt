@@ -70,11 +70,11 @@ class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        easyPlayer?.setSurfaceHolder(holder)
+        //easyPlayer?.setSurfaceHolder(holder)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        // easyPlayer?.setSurfaceHolder(holder)
+        easyPlayer?.setSurfaceHolder(holder)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
