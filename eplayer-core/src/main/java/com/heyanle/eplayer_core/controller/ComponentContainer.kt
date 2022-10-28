@@ -37,9 +37,9 @@ class ComponentContainer(
 
     fun toggleShowState(){
         if(!isShowing()){
-            hide()
-        }else{
             show()
+        }else{
+            hide()
         }
     }
 

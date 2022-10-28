@@ -50,7 +50,7 @@ open class BaseController:
 
     protected var componentContainer: ComponentContainer? = null
 
-    private var mIsShowing = false
+    private var mIsShowing = true
     private var mIsLocked = false
 
     // 是否监听屏幕旋转来
@@ -66,13 +66,6 @@ open class BaseController:
     // 是否开始监听进度
     private var mIsStartProgress = false
 
-    // 展示和隐藏动画，在 IComponent 的 onVisibleChanged 中传入，当然组件可选择性使用
-    protected val mShowAnim: Animation = AlphaAnimation(0f, 1f).apply {
-        duration = 300
-    }
-    protected val mHideAnim: Animation = AlphaAnimation(1f, 0f).apply {
-        duration = 300
-    }
 
     private val mHideRunnable = Runnable {
         hide()
@@ -312,13 +305,13 @@ open class BaseController:
 
     // == 事件 step.1 处理与分发给 Components =============================================
 
-    protected open fun handleVisibilityChanged(isVisible: Boolean, anim: Animation) {
+    protected open fun handleVisibilityChanged(isVisible: Boolean) {
         if (!mIsLocked) { //没锁住时才向ControlComponent下发此事件
             runWithAllComponents {
-                onVisibleChanged(isVisible, anim)
+                onVisibleChanged(isVisible)
             }
         }
-        onHandleVisibilityChanged(isVisible, anim)
+        onHandleVisibilityChanged(isVisible)
     }
 
     protected open fun handleLockStateChanged(locked: Boolean) {
@@ -361,7 +354,7 @@ open class BaseController:
 
     // == 事件 step.2 分发给子类，子类可重写 =============================================
 
-    protected open fun onHandleVisibilityChanged(isVisible: Boolean, anim: Animation){}
+    protected open fun onHandleVisibilityChanged(isVisible: Boolean){}
 
     protected open fun onHandleLockStateChanged(isLocked: Boolean){}
 
@@ -446,7 +439,7 @@ open class BaseController:
     override fun show() {
         if(!mIsShowing){
             startFadeOut()
-            handleVisibilityChanged(true, mShowAnim)
+            handleVisibilityChanged(true)
             mIsShowing = true
         }
     }
@@ -454,7 +447,7 @@ open class BaseController:
     override fun hide() {
         if(mIsShowing){
             stopFadeOut()
-            handleVisibilityChanged(false, mHideAnim)
+            handleVisibilityChanged(false)
             mIsShowing = false
         }
     }

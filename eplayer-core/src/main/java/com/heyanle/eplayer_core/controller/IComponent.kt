@@ -14,7 +14,7 @@ interface IComponent: IComponentGetter {
 
     fun onPlayStateChanged(playState: Int)
 
-    fun onVisibleChanged(isVisible: Boolean, anim: Animation)
+    fun onVisibleChanged(isVisible: Boolean)
 
     fun onProgressUpdate(duration: Long, position: Long)
 
@@ -22,7 +22,7 @@ interface IComponent: IComponentGetter {
 
     fun getView(): View?
 
-    fun getLayoutParam(): RelativeLayout.LayoutParams?
+    fun getLayoutParam(): RelativeLayout.LayoutParams? = null
 
     /**
      * 传入容器，组件可通过容器控制视频播放，或视频控制器
@@ -35,7 +35,7 @@ interface IComponent: IComponentGetter {
     /**
      * 移除时调用，建议在该方法里将 Container 对象置空，防止内存泄漏
      */
-    fun onRemove()
+    fun onRemove(){}
 
     override fun getComponent(): IComponent {
         return this

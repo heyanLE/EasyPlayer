@@ -7,6 +7,8 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.WindowInsetsControllerCompat
@@ -81,6 +83,14 @@ open class BaseEasyPlayerView:
 
     }
 
+    fun setDataSource(url: String, headers:  Map<String, String>? = null){
+        this.url = url
+        headers?.let {
+            this.headers = it
+        }
+
+    }
+
     // == Controller 管理和 事件分发 ============
 
     fun addController(isAddToParent: Boolean = true, vararg controller: IController){
@@ -130,24 +140,31 @@ open class BaseEasyPlayerView:
     // == override IPlayer ==========================
 
     override fun start() {
-        if (isInIdleState()
-            || isInStartAbortState()
-        ) {
-            startFirst()
-        } else if (isInPlaybackState()) {
-            startInPlaybackState()
+        post {
+            if (isInIdleState()
+                || isInStartAbortState()
+            ) {
+                startFirst()
+                startInPlaybackState()
+            } else if (isInPlaybackState()) {
+                startInPlaybackState()
+            }
         }
+
     }
 
     override fun pause() {
-        runWithEnvironmentIfNotNull {
-            if(isInPlaybackState() && playerEngine.isPlaying()){
-                playerEngine.pause()
-                dispatchPlayStateChange(EasyPlayStatus.STATE_PAUSED)
-                renderContainer.keepScreenOn = false
-            }
+        post {
+            runWithEnvironmentIfNotNull {
+                if(isInPlaybackState() && playerEngine.isPlaying()){
+                    playerEngine.pause()
+                    dispatchPlayStateChange(EasyPlayStatus.STATE_PAUSED)
+                    renderContainer.keepScreenOn = false
+                }
 
+            }
         }
+
     }
 
     override fun getDuration(): Long {
@@ -162,7 +179,7 @@ open class BaseEasyPlayerView:
     override fun getCurrentPosition(): Long {
         if(isInPlaybackState()){
             runWithEnvironmentIfNotNull {
-                mCurrentPosition = playerEngine.getCurrentPosition()
+                mCurrentPosition = playerEngine.getCurrentPosition()?:0L
                 return mCurrentPosition
             }
         }
@@ -199,11 +216,11 @@ open class BaseEasyPlayerView:
             val activity = act.get()?: return
             val decorView = (activity.window.decorView as? ViewGroup)?: return
             mIsFullScreen = true
-            // 隐藏状态栏和虚拟按键
-            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
-
             // 横屏
             ActivityScreenHelper.activityScreenOrientationLandscape(activity)
+
+            // 隐藏状态栏和虚拟按键
+            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
 
             // 移除视图
             removeView(realViewContainer)
@@ -221,11 +238,13 @@ open class BaseEasyPlayerView:
         val decorView = (activity.window.decorView as? ViewGroup)?: return
         mIsFullScreen = false
 
-        // 展示状态栏和虚拟按钮
-        MediaHelper.setIsSystemBarsShow(activity, true)
+
 
         // 竖屏
         ActivityScreenHelper.activityScreenOrientationPortrait(activity)
+
+        // 展示状态栏和虚拟按钮
+        MediaHelper.setIsSystemBarsShow(activity, true)
 
         // 从  decorView 中移除
         decorView.removeView(realViewContainer)
@@ -375,6 +394,7 @@ open class BaseEasyPlayerView:
             mCurrentPosition = progressManager.getProgress(url)
         }
         startPrepare()
+
         return true
     }
 
@@ -457,12 +477,18 @@ open class BaseEasyPlayerView:
             new.render.attachToPlayerEngine(new.playerEngine)
             new.render.beforeAddToWindow(new.render.getView(), renderContainer)
             renderContainer.addView(new.render.getView())
+            new.playerEngine.init()
         }
     }
 
     private fun findEnvironmentAndControllerFromChildren(){
+        val viewSet = HashSet<View>()
         for(i in 0 until childCount){
-            when(val v = getChildAt(i)){
+            viewSet.add(getChildAt(i))
+        }
+        viewSet.forEach { v ->
+            Log.d("BaseEasyPlayer", "v -> ${v.toString()}")
+            when(v){
                 is PlayerEngineViewConfig<*> -> {
                     environmentBuilder.playerEngineFactory = v.getFactory()
                     removeView(v)

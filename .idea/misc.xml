@@ -3,7 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/EasyPlayer/app/src/main/res/drawable/player_bottom_bg.xml" value="0.1755" />
         <entry key="..\:/EasyPlayer/app/src/main/res/layout/activity_player.xml" value="0.21580547112462006" />
+        <entry key="..\:/EasyPlayer/app/src/main/res/layout/test_component.xml" value="0.33" />
       </map>
     </option>
   </component>

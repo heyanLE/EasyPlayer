@@ -127,7 +127,7 @@ class ExoPlayerEngine(
 
     override fun getCurrentPosition(): Long {
         return if (!::internalPlayer.isInitialized) 0
-        else internalPlayer.currentPosition
+        else internalPlayer.currentPosition?:0L
     }
 
     override fun getDuration(): Long {

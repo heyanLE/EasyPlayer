@@ -71,9 +71,8 @@ open class GestureController: BaseController,
     // 是否在普通屏幕启动长按倍速
     var enableLongPressInNormal = true
 
-    // 播放器倍速控制回调，由外界实现
-    // return: 是否显示相关 UI（将事件传递给 GestureComponent，默认不传递）
-    var onPlayerSpeedUp:()->Boolean = {false}
+    private var isLongPress = false
+
 
     init {
         setOnTouchListener(this)
@@ -122,14 +121,15 @@ open class GestureController: BaseController,
         return true
     }
 
-    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+    override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
         if (isInPlaybackState()) {
             componentContainer?.toggleShowState()
         }
         return true
     }
 
-    override fun onDoubleTap(e: MotionEvent?): Boolean {
+
+    override fun onDoubleTap(e: MotionEvent): Boolean {
         if (isDoubleTapTogglePlayEnabled && !isLocked() && isInPlaybackState()) togglePlay()
         return true
     }
@@ -182,34 +182,36 @@ open class GestureController: BaseController,
         return true
     }
 
-    override fun onLongPress(e: MotionEvent?) {
+    override fun onLongPress(e: MotionEvent) {
         if (!isInPlaybackState() //不处于播放状态
             || !isLongPressSpeedUp //关闭了长按倍速
             || !mCanLongPress //不能长按
             || isLocked() //锁住了屏幕
         ) //处于屏幕边沿
             return
+        isLongPress = true
         onLongPress()
     }
 
     // 没用的事件
-    override fun onShowPress(e: MotionEvent?) {
+    override fun onShowPress(e: MotionEvent) {
     }
 
-    override fun onSingleTapUp(e: MotionEvent?): Boolean {
-        return false
+    override fun onSingleTapUp(e: MotionEvent): Boolean {
+
+        return true
     }
 
     override fun onFling(
-        e1: MotionEvent?,
-        e2: MotionEvent?,
+        e1: MotionEvent,
+        e2: MotionEvent,
         velocityX: Float,
         velocityY: Float
     ): Boolean {
         return false
     }
 
-    override fun onDoubleTapEvent(e: MotionEvent?): Boolean {
+    override fun onDoubleTapEvent(e: MotionEvent): Boolean {
         return false
     }
 
@@ -219,10 +221,12 @@ open class GestureController: BaseController,
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         //滑动结束时事件处理
-        if (!mGestureDetector.onTouchEvent(event)) {
+        if (isLongPress || !mGestureDetector.onTouchEvent(event)) {
+
             when (event.action) {
                 MotionEvent.ACTION_UP -> {
                     stopToSlide()
+                    isLongPress = false
                     onUp()
                     if (mSeekPosition >= 0) {
                         componentContainer?.seekTo(mSeekPosition)
@@ -230,6 +234,7 @@ open class GestureController: BaseController,
                     }
                 }
                 MotionEvent.ACTION_CANCEL -> {
+                    isLongPress = false
                     stopToSlide()
                     onUp()
                     mSeekPosition = -1
@@ -240,17 +245,15 @@ open class GestureController: BaseController,
     }
 
     // 将事件交给 Detector
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
         return mGestureDetector.onTouchEvent(event)
     }
 
     // == 事件处理和分发 ============
 
     private fun onLongPress(){
-        if(onPlayerSpeedUp()){
-            runWithAllComponents {
-                (this as? IGestureComponent)?.onLongPressStart()
-            }
+        runWithAllComponents {
+            (this as? IGestureComponent)?.onLongPressStart()
         }
     }
 
