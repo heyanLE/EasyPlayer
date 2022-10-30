@@ -27,9 +27,6 @@ class TestActivity: AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        binding.playerView.post {
-            binding.playerView.startFullScreen()
-        }
 //        binding.playerView.start()
     }
 
