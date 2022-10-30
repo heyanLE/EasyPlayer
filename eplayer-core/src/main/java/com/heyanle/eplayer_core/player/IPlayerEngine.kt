@@ -43,6 +43,10 @@ interface IPlayerEngine {
 
     fun setSurfaceHolder(holder: SurfaceHolder)
 
+    fun clearSurface(surface: Surface)
+
+    fun clearSurfaceHolder(holder: SurfaceHolder)
+
     fun setVolume(left: Float, right: Float)
 
     fun setLooping(isLooping: Boolean)

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.provider.MediaStore
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
@@ -41,9 +42,6 @@ open class BaseEasyPlayerView:
     IPlayer,
     IPlayerEngine.EventListener
 {
-
-    // activity 对象，使用弱引用
-    private var act: WeakReference<Activity?> = WeakReference(null)
 
     private val realViewContainer = FrameLayout(context)
 
@@ -213,14 +211,11 @@ open class BaseEasyPlayerView:
             return
         }
         runWithEnvironmentIfNotNull {
-            val activity = act.get()?: return
+            val activity = getActivity()?: return
             val decorView = (activity.window.decorView as? ViewGroup)?: return
             mIsFullScreen = true
             // 横屏
             ActivityScreenHelper.activityScreenOrientationLandscape(activity)
-
-            // 隐藏状态栏和虚拟按键
-            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
 
             // 移除视图
             removeView(realViewContainer)
@@ -230,21 +225,20 @@ open class BaseEasyPlayerView:
 
             // 分发事件
             dispatchPlayerStateChange(EasyPlayerStatus.PLAYER_FULL_SCREEN)
+
+            // 隐藏状态栏和虚拟按键
+            MediaHelper.setIsSystemBarsShow(activity, false)
+            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
         }
     }
 
     override fun stopFullScreen() {
-        val activity = act.get()?: return
+        val activity = getActivity()?: return
         val decorView = (activity.window.decorView as? ViewGroup)?: return
         mIsFullScreen = false
 
-
-
         // 竖屏
         ActivityScreenHelper.activityScreenOrientationPortrait(activity)
-
-        // 展示状态栏和虚拟按钮
-        MediaHelper.setIsSystemBarsShow(activity, true)
 
         // 从  decorView 中移除
         decorView.removeView(realViewContainer)
@@ -254,6 +248,9 @@ open class BaseEasyPlayerView:
 
         // 分发事件
         dispatchPlayerStateChange(EasyPlayerStatus.PLAYER_NORMAL)
+
+        // 展示状态栏和虚拟按钮
+        MediaHelper.setIsSystemBarsShow(activity, true)
 
     }
 
@@ -513,6 +510,14 @@ open class BaseEasyPlayerView:
         return realEnvironment.get()?:throw IllegalStateException("requireEnvironment failed")
     }
 
+    fun onBackPress(): Boolean {
+        if(mIsFullScreen){
+            stopFullScreen()
+            return true
+        }
+        return false
+    }
+
     private inline fun runWithEnvironmentIfNotNull(block: EasyPlayerEnvironment.()->Unit){
         realEnvironment.get()?.let {
             it.block()
@@ -526,18 +531,26 @@ open class BaseEasyPlayerView:
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        PlayUtils.findActivity(context)?.let {
-            act = WeakReference(it)
-        }
+//        PlayUtils.findActivity(context)?.let {
+//            act = WeakReference(it)
+//        }
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
         super.onWindowFocusChanged(hasWindowFocus)
         if(hasWindowFocus && mIsFullScreen){
-            val activity = act.get()?:return
-            MediaHelper.setSystemBarsBehavior(activity, WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
+            MediaHelper.setSystemBarsBehavior(requireActivity(), WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
         }
     }
+
+    private fun requireActivity(): Activity {
+        return getActivity() ?: throw IllegalStateException("BaseEasyPlayer Not in Activity")
+    }
+
+    private fun getActivity(): Activity?{
+        return PlayUtils.findActivity(context)
+    }
+
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)

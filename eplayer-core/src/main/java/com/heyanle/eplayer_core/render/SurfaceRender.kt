@@ -78,6 +78,7 @@ class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
+        easyPlayer?.clearSurfaceHolder(holder)
     }
 
     constructor(context: Context?) : super(context)

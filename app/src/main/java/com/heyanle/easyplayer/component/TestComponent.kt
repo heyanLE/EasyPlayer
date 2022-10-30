@@ -76,6 +76,9 @@ class TestComponent: FrameLayout, IGestureComponent, IComponentGetter, SeekBar.O
         binding.ivFullscreen.setOnClickListener{
             container?.toggleFullScreen()
         }
+        binding.ivController.setOnClickListener {
+            container?.togglePlay()
+        }
     }
 
     // == override IComponent ========================
@@ -174,7 +177,7 @@ class TestComponent: FrameLayout, IGestureComponent, IComponentGetter, SeekBar.O
     }
 
     override fun onStopSlide() {
-
+        container?.hide()
     }
 
     override fun onPositionChange(slidePosition: Long, currentPosition: Long, duration: Long) {
