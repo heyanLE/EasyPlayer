@@ -2,6 +2,7 @@ package com.heyanle.eplayer_core.render
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.util.AttributeSet
 import android.view.*
@@ -17,6 +18,7 @@ class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
 
     private val measureHelper = MeasureHelper()
     private var easyPlayer: IPlayerEngine? = null
+    private var backgroundColor: Int = Color.TRANSPARENT
 
     init {
         val holder = holder
@@ -52,6 +54,18 @@ class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
         return this
     }
 
+    override fun setBackgroundColor(color: Int) {
+        super.setBackgroundColor(color)
+        backgroundColor = color
+        kotlin.runCatching {
+            val canvas = holder.lockCanvas()
+            canvas.drawColor(backgroundColor)
+            holder.unlockCanvasAndPost(canvas)
+        }.onFailure {
+            it.printStackTrace()
+        }
+    }
+
     override fun beforeAddToWindow(view: View, parent: ViewGroup) {
 
     }
@@ -74,10 +88,16 @@ class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        val canvas = holder.lockCanvas()
+        canvas.drawColor(backgroundColor)
+        holder.unlockCanvasAndPost(canvas)
         easyPlayer?.setSurfaceHolder(holder)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
+        val canvas = holder.lockCanvas()
+        canvas.drawColor(backgroundColor)
+        holder.unlockCanvasAndPost(canvas)
         easyPlayer?.clearSurfaceHolder(holder)
     }
 

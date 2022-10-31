@@ -148,7 +148,9 @@ class ExoPlayerEngine(
     }
 
     override fun setSurfaceHolder(holder: SurfaceHolder) {
-        setSurface(holder.surface)
+        if (::internalPlayer.isInitialized) {
+            internalPlayer.setVideoSurfaceHolder(holder)
+        }
     }
 
     override fun clearSurface(surface: Surface) {
@@ -158,7 +160,9 @@ class ExoPlayerEngine(
     }
 
     override fun clearSurfaceHolder(holder: SurfaceHolder) {
-        clearSurface(holder.surface)
+        if (::internalPlayer.isInitialized){
+            internalPlayer.clearVideoSurfaceHolder(holder)
+        }
     }
 
     override fun setVolume(left: Float, right: Float) {

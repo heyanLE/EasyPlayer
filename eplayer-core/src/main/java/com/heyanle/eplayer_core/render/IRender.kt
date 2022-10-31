@@ -23,6 +23,8 @@ interface IRender {
 
     fun getView(): View
 
+    fun setBackgroundColor(color: Int)
+
     fun beforeAddToWindow(view: View, parent: ViewGroup)
 
     fun screenShot(): Bitmap?
