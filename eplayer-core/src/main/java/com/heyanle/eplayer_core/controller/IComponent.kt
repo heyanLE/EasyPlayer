@@ -20,13 +20,18 @@ interface IComponent: IComponentGetter {
 
     fun onLockStateChange(isLocked: Boolean)
 
+    /**
+     * 获取 View，如果为 null 则不添加到 Controller 的 Container 中，只调用其他监听事件
+     * 否则则将其添加进 Controller 的 Container 中
+     * 注意该方法可能会多次被多个对象调用，不要再里面初始化 View
+     */
     fun getView(): View?
 
     fun getLayoutParam(): RelativeLayout.LayoutParams? = null
 
     /**
      * 传入容器，组件可通过容器控制视频播放，或视频控制器
-     * 可能会多次调用
+     * 注意该方法可能会多次被多个对象调用，不要再里面进行其他操作，直接更新持有的 ComponentContainer 对象即可
      */
     fun onAttachToContainer(controller: ComponentContainer)
 

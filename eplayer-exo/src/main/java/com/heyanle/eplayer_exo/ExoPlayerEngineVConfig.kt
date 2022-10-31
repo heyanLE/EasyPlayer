@@ -1,13 +1,13 @@
-package com.heyanle.eplayer_core.render
+package com.heyanle.eplayer_exo
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
+import com.heyanle.eplayer_core.player.PlayerEngineVConfig
 
 /**
  * Create by heyanlin on 2022/10/27
  */
-abstract class RenderViewConfig<T: IRenderFactory> : View, IRenderFactory {
+class ExoPlayerEngineVConfig: PlayerEngineVConfig<ExoPlayerEngineFactory>  {
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -23,11 +23,10 @@ abstract class RenderViewConfig<T: IRenderFactory> : View, IRenderFactory {
         defStyleRes: Int
     ) : super(context, attrs, defStyleAttr, defStyleRes)
 
-    abstract fun getFactory(): T
-
-    override fun invoke(p1: Context): IRender {
-        return getFactory().invoke(p1)
+    override fun getFactory(): ExoPlayerEngineFactory {
+        return ExoPlayerEngineFactory()
     }
+
 
 
 

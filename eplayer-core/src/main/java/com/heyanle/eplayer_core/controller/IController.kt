@@ -74,6 +74,7 @@ interface IController: IControllerGetter {
 
     /**
      * 获取 控制器 view 的 Container
+     * 注意该方法可能会多次被多个对象调用，不要再里面初始化 View
      */
     fun getViewContainer(): ViewGroup
 

@@ -11,6 +11,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.RelativeLayout
 import androidx.core.view.contains
+import com.heyanle.eplayer_core.EasyPlayerManager
 import com.heyanle.eplayer_core.constant.EasyPlayStatus
 import com.heyanle.eplayer_core.constant.EasyPlayerStatus
 import com.heyanle.eplayer_core.player.IPlayer
@@ -54,7 +55,7 @@ open class BaseController:
     private var mIsLocked = false
 
     // 是否监听屏幕旋转来
-    protected var enableOrientation = false
+    var enableOrientation = EasyPlayerManager.enableOrientation
     // 当前屏幕方向记录
     private var mOrientation = 0
     private val mOrientationHelper: OrientationHelper by lazy {

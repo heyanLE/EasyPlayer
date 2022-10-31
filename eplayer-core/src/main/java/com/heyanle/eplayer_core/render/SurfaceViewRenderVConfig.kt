@@ -1,13 +1,13 @@
-package com.heyanle.eplayer_exo
+package com.heyanle.eplayer_core.render
 
 import android.content.Context
 import android.util.AttributeSet
-import com.heyanle.eplayer_core.player.PlayerEngineViewConfig
 
 /**
  * Create by heyanlin on 2022/10/27
  */
-class ExoPlayerEngineViewConfig: PlayerEngineViewConfig<ExoPlayerEngineFactory>  {
+class SurfaceViewRenderVConfig
+    : RenderVConfig<SurfaceViewRenderFactory> {
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -23,8 +23,9 @@ class ExoPlayerEngineViewConfig: PlayerEngineViewConfig<ExoPlayerEngineFactory> 
         defStyleRes: Int
     ) : super(context, attrs, defStyleAttr, defStyleRes)
 
-    override fun getFactory(): ExoPlayerEngineFactory {
-        return ExoPlayerEngineFactory()
+
+    override fun getFactory(): SurfaceViewRenderFactory {
+        return SurfaceViewRenderFactory()
     }
 
 

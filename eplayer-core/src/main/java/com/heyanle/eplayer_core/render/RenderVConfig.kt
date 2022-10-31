@@ -7,8 +7,7 @@ import android.view.View
 /**
  * Create by heyanlin on 2022/10/27
  */
-class SurfaceRenderViewConfig
-    : RenderViewConfig<SurfaceRenderFactory> {
+abstract class RenderVConfig<T: IRenderFactory> : View, IRenderFactory {
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -24,11 +23,11 @@ class SurfaceRenderViewConfig
         defStyleRes: Int
     ) : super(context, attrs, defStyleAttr, defStyleRes)
 
+    abstract fun getFactory(): T
 
-    override fun getFactory(): SurfaceRenderFactory {
-        return SurfaceRenderFactory()
+    override fun invoke(p1: Context): IRender {
+        return getFactory().invoke(p1)
     }
-
 
 
 

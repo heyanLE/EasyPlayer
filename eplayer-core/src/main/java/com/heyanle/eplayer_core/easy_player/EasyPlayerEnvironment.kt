@@ -1,6 +1,7 @@
 package com.heyanle.eplayer_core.easy_player
 
 import android.content.Context
+import com.heyanle.eplayer_core.EasyPlayerManager
 import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.player.IPlayerEngineFactory
 import com.heyanle.eplayer_core.render.IRender
@@ -20,8 +21,17 @@ class EasyPlayerEnvironment(
     ){
 
         fun build(context: Context): EasyPlayerEnvironment?{
-            if(playerEngineFactory == null || renderFactory == null){
-                return null
+            if(playerEngineFactory == null){
+                if(EasyPlayerManager.playerEngineFactory == null){
+                    return null
+                }
+                playerEngineFactory = EasyPlayerManager.playerEngineFactory
+            }
+            if(renderFactory == null){
+                if(EasyPlayerManager.renderFactory == null){
+                    return null
+                }
+                renderFactory = EasyPlayerManager.renderFactory
             }
             val playerEngine = playerEngineFactory?.invoke(context) ?: return null
             val renderFactory = renderFactory?.invoke(context) ?: return null

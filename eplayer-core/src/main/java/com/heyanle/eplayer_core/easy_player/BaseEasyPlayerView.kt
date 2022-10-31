@@ -4,8 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
-import android.graphics.Rect
-import android.provider.MediaStore
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
@@ -21,14 +19,11 @@ import com.heyanle.eplayer_core.controller.IController
 import com.heyanle.eplayer_core.controller.IControllerGetter
 import com.heyanle.eplayer_core.player.IPlayer
 import com.heyanle.eplayer_core.player.IPlayerEngine
-import com.heyanle.eplayer_core.player.IPlayerEngineFactory
-import com.heyanle.eplayer_core.player.PlayerEngineViewConfig
-import com.heyanle.eplayer_core.render.IRenderFactory
-import com.heyanle.eplayer_core.render.RenderViewConfig
+import com.heyanle.eplayer_core.player.PlayerEngineVConfig
+import com.heyanle.eplayer_core.render.RenderVConfig
 import com.heyanle.eplayer_core.utils.ActivityScreenHelper
 import com.heyanle.eplayer_core.utils.MediaHelper
 import com.heyanle.eplayer_core.utils.PlayUtils
-import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -77,7 +72,7 @@ open class BaseEasyPlayerView:
 
     init {
         addView(realViewContainer, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
-        realViewContainer.addView(renderContainer, 0, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
+        // realViewContainer.addView(renderContainer, 0, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
 
     }
 
@@ -111,6 +106,14 @@ open class BaseEasyPlayerView:
                 realViewContainer.removeView(c.getViewContainer())
             }
         }
+    }
+
+    private fun getControllersSnapshot(): LinkedHashSet<IController> {
+        val res = LinkedHashSet<IController>()
+        controllerLock.read {
+            res.addAll(controllers)
+        }
+        return res
     }
 
     protected fun dispatchPlayerStateChange(playerState: Int){
@@ -473,6 +476,7 @@ open class BaseEasyPlayerView:
             new.playerEngine.setEventListener(this)
             new.render.attachToPlayerEngine(new.playerEngine)
             new.render.beforeAddToWindow(new.render.getView(), renderContainer)
+            new.render.onRenderLoad(renderContainer, realViewContainer, getControllersSnapshot())
             renderContainer.addView(new.render.getView())
             new.playerEngine.init()
         }
@@ -486,13 +490,16 @@ open class BaseEasyPlayerView:
         viewSet.forEach { v ->
             Log.d("BaseEasyPlayer", "v -> ${v.toString()}")
             when(v){
-                is PlayerEngineViewConfig<*> -> {
+                is PlayerEngineVConfig<*> -> {
                     environmentBuilder.playerEngineFactory = v.getFactory()
                     removeView(v)
                 }
-                is RenderViewConfig<*> -> {
+                is RenderVConfig<*> -> {
                     environmentBuilder.renderFactory =  v.getFactory()
                     removeView(v)
+                    // 将 renderContainer 放到 Controller 对应位置
+                    realViewContainer.removeView(renderContainer)
+                    realViewContainer.addView(renderContainer)
                 }
                 is IControllerGetter -> {
                     removeView(v)

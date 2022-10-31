@@ -14,7 +14,7 @@ import com.heyanle.eplayer_core.utils.MeasureHelper
  * Created by HeYanLe on 2022/10/23 15:39.
  * https://github.com/heyanLE
  */
-class SurfaceRender: SurfaceView, IRender, SurfaceHolder.Callback {
+class SurfaceViewRender: SurfaceView, IRender, SurfaceHolder.Callback {
 
     private val measureHelper = MeasureHelper()
     private var easyPlayer: IPlayerEngine? = null
