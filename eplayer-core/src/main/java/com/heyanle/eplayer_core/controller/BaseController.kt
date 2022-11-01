@@ -7,19 +7,14 @@ import android.content.pm.ActivityInfo
 import android.util.AttributeSet
 import android.view.OrientationEventListener
 import android.view.ViewGroup
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
 import android.widget.RelativeLayout
-import androidx.core.view.contains
 import com.heyanle.eplayer_core.EasyPlayerManager
 import com.heyanle.eplayer_core.constant.EasyPlayStatus
 import com.heyanle.eplayer_core.constant.EasyPlayerStatus
 import com.heyanle.eplayer_core.player.IPlayer
-import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.utils.OrientationHelper
 import com.heyanle.eplayer_core.utils.PlayUtils
 import java.lang.ref.WeakReference
-import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -38,7 +33,7 @@ import kotlin.concurrent.write
 open class BaseController:
     RelativeLayout,
     IController,
-    OrientationHelper.OnOrientationChangeListener
+    OrientationHelper.OnOrientationChangedListener
 {
 
     var fadeOutTimeout = 4000L
@@ -60,7 +55,7 @@ open class BaseController:
     private var mOrientation = 0
     private val mOrientationHelper: OrientationHelper by lazy {
         OrientationHelper(context).also {
-            it.setOnOrientationChangeListener(this)
+            it.listener = this@BaseController
         }
     }
 

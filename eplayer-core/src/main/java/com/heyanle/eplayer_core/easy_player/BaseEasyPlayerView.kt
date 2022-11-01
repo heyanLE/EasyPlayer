@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
+import android.media.AudioManager
+import android.os.Parcelable
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
@@ -11,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.media.AudioAttributesCompat
 import com.heyanle.eplayer_core.EasyPlayerManager
 import com.heyanle.eplayer_core.constant.EasyPlayStatus
 import com.heyanle.eplayer_core.constant.EasyPlayerStatus
@@ -22,8 +25,10 @@ import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.player.PlayerEngineVConfig
 import com.heyanle.eplayer_core.render.RenderVConfig
 import com.heyanle.eplayer_core.utils.ActivityScreenHelper
+import com.heyanle.eplayer_core.utils.AudioFocusHelper
 import com.heyanle.eplayer_core.utils.MediaHelper
 import com.heyanle.eplayer_core.utils.PlayUtils
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -35,7 +40,8 @@ import kotlin.concurrent.write
 open class BaseEasyPlayerView:
     FrameLayout,
     IPlayer,
-    IPlayerEngine.EventListener
+    IPlayerEngine.EventListener,
+    AudioFocusHelper.OnAudioFocusListener
 {
 
     private val realViewContainer = FrameLayout(context)
@@ -48,23 +54,35 @@ open class BaseEasyPlayerView:
     // 环境创建器
     private var environmentBuilder = EasyPlayerEnvironment.Builder()
 
+    // controller 容器和锁
     protected val controllers: LinkedHashSet<IController> = LinkedHashSet()
     protected val controllerLock = ReentrantReadWriteLock()
 
+    // 媒体源
     protected var url: String = ""
     protected var headers: Map<String, String> = hashMapOf()
 
     protected var fd: AssetFileDescriptor? = null
 
+    // 当前播放状态和播放器状态
     private var mCurrentPlayerState = EasyPlayerStatus.PLAYER_NORMAL
     private var mCurrentPlayState = EasyPlayStatus.STATE_IDLE
 
+    // 当前进度（临时变量）
     private var mCurrentPosition: Long = 0L
     var progressManager = EasyPlayerManager.progressManager
 
+    // 是否循环播放
     var isLooping: Boolean = false
+    // 是否静音
     private var mIsMute: Boolean = false
+
+    // 当前缩放情况
     private var mCurrentScaleType: Int = EasyPlayerManager.screenScaleType
+
+    // 音量焦点
+    protected var audioFocusHelper: AudioFocusHelper = AudioFocusHelper(context)
+    var enableAudioFocus = EasyPlayerManager.enableAudioFocus
 
     protected var mVideoSize = intArrayOf(0, 0)
 
@@ -73,7 +91,7 @@ open class BaseEasyPlayerView:
     init {
         addView(realViewContainer, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
         // realViewContainer.addView(renderContainer, 0, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
-
+        audioFocusHelper.setListener(this)
     }
 
     fun setDataSource(url: String, headers:  Map<String, String>? = null){
@@ -160,6 +178,7 @@ open class BaseEasyPlayerView:
                 if(isInPlaybackState() && playerEngine.isPlaying()){
                     playerEngine.pause()
                     dispatchPlayStateChange(EasyPlayStatus.STATE_PAUSED)
+                    audioFocusHelper.abandonFocus()
                     renderContainer.keepScreenOn = false
                 }
 
@@ -354,6 +373,7 @@ open class BaseEasyPlayerView:
 
     override fun onPrepared() {
         dispatchPlayStateChange(EasyPlayStatus.STATE_PREPARED)
+        requestFocusIfNeed()
         if(mCurrentPosition > 0){
             seekTo(mCurrentPosition)
         }
@@ -386,7 +406,68 @@ open class BaseEasyPlayerView:
         }
     }
 
+    // == override audioFocusHelper.OnAudioFocusChangeListener ==========
+    private var mStartRequested: Boolean = false
+    private var mPausedForLoss = false
+    override fun onAudioFocusChange(focusChange: Int) {
+        when(focusChange){
+            AudioManager.AUDIOFOCUS_GAIN, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT -> {
+                if (mStartRequested || mPausedForLoss) {
+                    start()
+                    mStartRequested = false
+                    mPausedForLoss = false
+                }
+                if (!isMute()) //恢复音量
+                    runWithEnvironmentIfNotNull {
+                        playerEngine.setVolume(1.0f, 1.0f)
+                    }
+
+            }
+            AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                if (isPlaying()) {
+                    mPausedForLoss = true
+                    pause()
+                }
+            }
+
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                runWithEnvironmentIfNotNull {
+                    if (playerEngine.isPlaying() && isMute()) {
+                        playerEngine.setVolume(0.1f, 0.1f)
+                    }
+                }
+
+            }
+        }
+    }
+
     // == PlayerView 自带相关逻辑 ===============
+
+    fun release(){
+        if (!isInIdleState()) {
+            runWithEnvironmentIfNotNull {
+                playerEngine.release()
+                render.release()
+            }
+
+            //释放Assets资源
+            kotlin.runCatching {
+                fd?.close()
+            }.onFailure {
+                it.printStackTrace()
+            }
+            //关闭AudioFocus监听
+            audioFocusHelper.abandonFocus()
+            //关闭屏幕常亮
+            renderContainer.keepScreenOn = false
+
+            saveProgress()
+            //重置播放进度
+            mCurrentPosition = 0
+            //切换转态
+            dispatchPlayStateChange(EasyPlayStatus.STATE_IDLE)
+        }
+    }
 
 
     protected open fun startFirst(): Boolean{
@@ -399,6 +480,7 @@ open class BaseEasyPlayerView:
     }
 
     protected open fun startInPlaybackState(){
+        requestFocusIfNeed()
         val environment = requireEnvironment()
         dispatchPlayStateChange(EasyPlayStatus.STATE_PLAYING)
         renderContainer.keepScreenOn = true
@@ -556,6 +638,24 @@ open class BaseEasyPlayerView:
 
     private fun getActivity(): Activity?{
         return PlayUtils.findActivity(context)
+    }
+
+    private fun requestFocusIfNeed(){
+        if(!isMute() && enableAudioFocus){
+            audioFocusHelper.requestFocusCompat(AudioAttributesCompat.USAGE_MEDIA, AudioAttributesCompat.CONTENT_TYPE_MOVIE)
+        }
+    }
+
+    protected fun saveProgress(){
+        runWithEnvironmentIfNotNull {
+            mCurrentPosition = playerEngine.getCurrentPosition()
+        }
+        progressManager.setProgress(url, mCurrentPosition)
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        saveProgress()
+        return super.onSaveInstanceState()
     }
 
 
