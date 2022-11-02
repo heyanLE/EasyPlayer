@@ -1,10 +1,22 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("maven-publish")
 }
+
+group = "com.heyanle"
+version = "1.0-SNAPSHOT"
 
 android {
     compileSdk = 33
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 
     defaultConfig {
         minSdk = 21
@@ -31,6 +43,11 @@ android {
     }
 }
 
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
 dependencies {
 
     api(project(":eplayer-core"))
@@ -39,4 +56,17 @@ dependencies {
     api("com.google.android.exoplayer:extension-rtmp:2.18.1")
 
 
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create("maven_public", MavenPublication::class) {
+                groupId = "com.heyanle"
+                artifactId = "eplayer-exo"
+                version = "1.0"
+                from(components.getByName("release"))
+            }
+        }
+    }
 }

@@ -14,7 +14,6 @@ object EasyPlayerManager {
     var playerEngineFactory: IPlayerEngineFactory? = null
     var renderFactory: IRenderFactory? = null
 
-    var enablePlayOnMobileNetwork: Boolean = true
     var enableOrientation: Boolean = true
     var enableAudioFocus: Boolean = true
 

@@ -164,7 +164,6 @@ open class BaseEasyPlayerView:
                 || isInStartAbortState()
             ) {
                 startFirst()
-                startInPlaybackState()
             } else if (isInPlaybackState()) {
                 startInPlaybackState()
             }
@@ -475,7 +474,11 @@ open class BaseEasyPlayerView:
             mCurrentPosition = progressManager.getProgress(url)
         }
         startPrepare()
-
+        requestFocusIfNeed()
+        val environment = requireEnvironment()
+        dispatchPlayStateChange(EasyPlayStatus.STATE_PLAYING)
+        renderContainer.keepScreenOn = true
+        environment.playerEngine.start()
         return true
     }
 
