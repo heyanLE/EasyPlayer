@@ -180,7 +180,7 @@ class TestComponent: FrameLayout, IGestureComponent, IComponentGetter, SeekBar.O
         container?.hide()
     }
 
-    override fun onPositionChange(slidePosition: Long, currentPosition: Long, duration: Long) {
+    override fun onSlidePositionChange(slidePosition: Long, currentPosition: Long, duration: Long) {
         container?.stopFadeOut()
         container?.stopProgressUpdate()
         binding.bottomLayout.visibility = View.VISIBLE

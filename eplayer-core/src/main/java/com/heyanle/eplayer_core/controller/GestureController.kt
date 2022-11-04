@@ -268,7 +268,7 @@ open class GestureController: BaseController,
         if (position < 0) position = 0
 
         runWithAllComponents {
-            (this as? IGestureComponent)?.onPositionChange(position, currentPosition, duration)
+            (this as? IGestureComponent)?.onSlidePositionChange(position, currentPosition, duration)
         }
 
         mSeekPosition = position

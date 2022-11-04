@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/eplayer-core" />
             <option value="$PROJECT_DIR$/eplayer-exo" />
+            <option value="$PROJECT_DIR$/eplayer-standard" />
           </set>
         </option>
       </GradleProjectSettings>
