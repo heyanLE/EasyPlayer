@@ -10,22 +10,24 @@
         android:layout_width="match_parent"
         android:layout_height="360dp">
 
+        <!--ExoPlayer 播放引擎-->
         <com.heyanle.eplayer_exo.ExoPlayerEngineVConfig
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
+        <!--SurfaceView 渲染引擎-->
         <com.heyanle.eplayer_core.render.SurfaceViewRenderVConfig
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
+        <!--GestureController 带手势功能的控制器-->
         <com.heyanle.eplayer_core.controller.GestureController
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.heyanle.easyplayer.component.TestComponent
+            <com.heyanle.eplayer_standard.component.StandardComponent
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
+                android:layout_height="match_parent" />
 
 
         </com.heyanle.eplayer_core.controller.GestureController>

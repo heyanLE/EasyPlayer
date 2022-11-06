@@ -2,6 +2,7 @@ package com.heyanle.eplayer_standard.component
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AlphaAnimation
@@ -14,17 +15,18 @@ import com.heyanle.eplayer_core.controller.ComponentContainer
 import com.heyanle.eplayer_core.controller.IComponent
 import com.heyanle.eplayer_core.controller.IComponentGetter
 import com.heyanle.eplayer_core.controller.IGestureComponent
-import com.heyanle.eplayer_standard.databinding.ComponentBottomBarBinding
+import com.heyanle.eplayer_standard.R
+import com.heyanle.eplayer_standard.databinding.ComponentStandardBinding
 import com.heyanle.eplayer_standard.utils.TimeUtils
 
 /**
  * Create by heyanlin on 2022/11/2
  */
-class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChangeListener {
+class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChangeListener {
 
     private var container: ComponentContainer? = null
 
-    private val binding: ComponentBottomBarBinding = ComponentBottomBarBinding.inflate(
+    private val binding: ComponentStandardBinding = ComponentStandardBinding.inflate(
         LayoutInflater.from(context), this, true)
 
     private var isLocked = false
@@ -77,20 +79,56 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
                 toggleFullScreen()
             }
         }
+        binding.ivController.setOnClickListener {
+            runWithContainer {
+                togglePlay()
+            }
+        }
+        binding.ivLock.setOnClickListener {
+            runWithContainer {
+                toggleLockState()
+            }
+        }
     }
 
     // == override IComponent
 
     override fun onPlayerStateChanged(playerState: Int) {
-        TODO("Not yet implemented")
+
     }
 
     override fun onPlayStateChanged(playState: Int) {
+        Log.d("StandardComponent", "playState $playState")
+        refreshPlayPauseBtStatus()
+        runWithContainer {
+            if(playState != EasyPlayStatus.STATE_PLAYING
+                && playState != EasyPlayStatus.STATE_BUFFERED){
+                stopProgressUpdate()
+            }else{
+                startProgressUpdate()
+            }
+
+            if(playState != EasyPlayStatus.STATE_BUFFERING
+                && playState != EasyPlayStatus.STATE_PREPARING) {
+                binding.progressBar.visibility = View.GONE
+                binding.ivController.visibility = View.VISIBLE
+            }else{
+                binding.progressBar.visibility = View.VISIBLE
+                binding.ivController.visibility = View.GONE
+            }
+
+        }
+
         when(playState){
-            EasyPlayStatus.STATE_PLAYING -> {
-                runWithContainer {
-                    startProgressUpdate()
-                }
+            EasyPlayStatus.STATE_IDLE, EasyPlayStatus.STATE_PLAYBACK_COMPLETED -> {
+                // 复原
+                binding.seekBar.progress = 0
+                binding.seekBar.secondaryProgress = 0
+                binding.root.visibility = View.GONE
+            }
+            EasyPlayStatus.STATE_BUFFERING -> {
+                binding.ivController.visibility = View.GONE
+                binding.progressBar.visibility = View.VISIBLE
             }
             else -> {
                 runWithContainer {
@@ -101,6 +139,11 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
     }
 
     override fun onVisibleChanged(isVisible: Boolean) {
+        runWithContainer {
+            if(!isPlaying()){
+                stopFadeOut()
+            }
+        }
         this.isVisible = isVisible
         if(!isProgressSlide && !isSeekBarTouching){
             binding.root.clearAnimation()
@@ -121,6 +164,16 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
 
     override fun onLockStateChange(isLocked: Boolean) {
         this.isLocked = isLocked
+        if(isLocked){
+            binding.ivLock.setImageResource(R.drawable.ic_baseline_lock_24)
+            binding.contentLayout.visibility = View.GONE
+            runWithContainer {
+                startFadeOut()
+            }
+        }else{
+            binding.ivLock.setImageResource(R.drawable.ic_baseline_lock_open_24)
+            binding.contentLayout.visibility = View.VISIBLE
+        }
     }
 
     override fun getView(): View {
@@ -128,7 +181,7 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
     }
 
     override fun getLayoutParam(): RelativeLayout.LayoutParams {
-        return RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
+        return RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
     }
 
     private fun requireContainer(): ComponentContainer {
@@ -149,8 +202,9 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
 
     // == override IGestureComponent
 
-
     override fun onSlidePositionChange(slidePosition: Long, currentPosition: Long, duration: Long) {
+        Log.d("StandardComponent", "onSlidePositionChange($slidePosition,$currentPosition,$duration)")
+
         super.onSlidePositionChange(slidePosition, currentPosition, duration)
         if(isLocked){
             return
@@ -163,7 +217,7 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
             binding.root.visibility = View.VISIBLE
             seekTo(slidePosition)
             refreshTimeUI(getDuration(), slidePosition)
-            setSeekbarProgress(slidePosition, duration)
+            setSeekbarProgress(duration, slidePosition)
         }
     }
 
@@ -212,13 +266,26 @@ class BottomBarComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChang
     private fun refreshTimeUI(duration: Long, position: Long){
         val durationStr = TimeUtils.toString(duration)
         val positionStr = TimeUtils.toString(position)
-        binding.tvCurrentTime.text = durationStr
-        binding.tvTotalTime.text = positionStr
+        binding.tvCurrentTime.text = positionStr
+        binding.tvTotalTime.text = durationStr
 
     }
 
-    private fun setSeekbarProgress(duration: Long, position: Long){
-        binding.seekBar.progress = ((duration.toFloat()/position)*binding.seekBar.max).toInt()
+    private fun setSeekbarProgress(duration: Long, position: Long ){
+        binding.seekBar.progress = ((position.toFloat()/duration)*binding.seekBar.max).toInt()
+    }
+
+    private fun refreshPlayPauseBtStatus(){
+        runWithContainer {
+            if(isPlaying()){
+                startFadeOut()
+                binding.ivController.setImageResource(R.drawable.ic_baseline_pause_24)
+            }else{
+                stopFadeOut()
+                binding.ivController.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+            }
+            Log.d("StandardComponent", "isPlaying ${isPlaying()}")
+        }
     }
 
     constructor(context: Context) : super(context)

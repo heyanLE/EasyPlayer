@@ -89,6 +89,7 @@ open class BaseEasyPlayerView:
     private var mIsFullScreen = false
 
     init {
+        realViewContainer.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
         addView(realViewContainer, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
         // realViewContainer.addView(renderContainer, 0, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
         audioFocusHelper.setListener(this)
@@ -227,7 +228,7 @@ open class BaseEasyPlayerView:
         return 0
     }
 
-    override fun startFullScreen() {
+    override fun startFullScreen(changeScreen: Boolean) {
         if(mIsFullScreen){
             return
         }
@@ -235,8 +236,11 @@ open class BaseEasyPlayerView:
             val activity = getActivity()?: return
             val decorView = (activity.window.decorView as? ViewGroup)?: return
             mIsFullScreen = true
-            // 横屏
-            ActivityScreenHelper.activityScreenOrientationLandscape(activity)
+
+            if(changeScreen) {
+                // 横屏
+                ActivityScreenHelper.activityScreenOrientationLandscape(activity)
+            }
 
             // 移除视图
             removeView(realViewContainer)
@@ -253,13 +257,15 @@ open class BaseEasyPlayerView:
         }
     }
 
-    override fun stopFullScreen() {
+    override fun stopFullScreen(changeScreen: Boolean) {
+        if(!mIsFullScreen) return
         val activity = getActivity()?: return
         val decorView = (activity.window.decorView as? ViewGroup)?: return
         mIsFullScreen = false
-
-        // 竖屏
-        ActivityScreenHelper.activityScreenOrientationPortrait(activity)
+        if(changeScreen) {
+            // 竖屏
+            ActivityScreenHelper.activityScreenOrientationPortrait(activity)
+        }
 
         // 从  decorView 中移除
         decorView.removeView(realViewContainer)
@@ -476,19 +482,19 @@ open class BaseEasyPlayerView:
         startPrepare()
         requestFocusIfNeed()
         val environment = requireEnvironment()
+        environment.playerEngine.start()
         dispatchPlayStateChange(EasyPlayStatus.STATE_PLAYING)
         renderContainer.keepScreenOn = true
-        environment.playerEngine.start()
+
         return true
     }
 
     protected open fun startInPlaybackState(){
         requestFocusIfNeed()
         val environment = requireEnvironment()
+        environment.playerEngine.start()
         dispatchPlayStateChange(EasyPlayStatus.STATE_PLAYING)
         renderContainer.keepScreenOn = true
-        environment.playerEngine.start()
-
     }
 
     protected open fun setPlayerEngineConfig(){

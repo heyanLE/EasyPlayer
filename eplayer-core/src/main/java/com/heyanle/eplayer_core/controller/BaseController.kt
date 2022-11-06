@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.util.AttributeSet
+import android.util.Log
 import android.view.OrientationEventListener
 import android.view.ViewGroup
 import android.widget.RelativeLayout
@@ -62,9 +63,12 @@ open class BaseController:
     // 是否开始监听进度
     private var mIsStartProgress = false
 
+    private var mIsFadeOut = false
 
     private val mHideRunnable = Runnable {
-        hide()
+        if(mIsFadeOut){
+            hide()
+        }
     }
 
     private val mUpdateProgressRunnable = object: Runnable {
@@ -193,7 +197,8 @@ open class BaseController:
         //没有开启设备方向监听的情况
         if (!enableOrientation) return
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        componentContainer?.stopFullScreen()
+        // 这里已经处理了屏幕旋转，不需要 Container 处理
+        componentContainer?.stopFullScreen(false)
     }
 
     /**
@@ -204,7 +209,8 @@ open class BaseController:
         if (componentContainer?.isFullScreen() == true) {
             handlePlayerStateChanged(EasyPlayerStatus.PLAYER_FULL_SCREEN)
         } else {
-            componentContainer?.startFullScreen()
+            // 这里已经处理了屏幕旋转，不需要 Container 处理
+            componentContainer?.startFullScreen(false)
         }
     }
 
@@ -216,7 +222,8 @@ open class BaseController:
         if (componentContainer?.isFullScreen() == true) {
             handlePlayerStateChanged(EasyPlayerStatus.PLAYER_FULL_SCREEN)
         } else {
-            componentContainer?.startFullScreen()
+            // 这里已经处理了屏幕旋转，不需要 Container 处理
+            componentContainer?.startFullScreen(false)
         }
     }
 
@@ -302,10 +309,9 @@ open class BaseController:
     // == 事件 step.1 处理与分发给 Components =============================================
 
     protected open fun handleVisibilityChanged(isVisible: Boolean) {
-        if (!mIsLocked) { //没锁住时才向ControlComponent下发此事件
-            runWithAllComponents {
-                onVisibleChanged(isVisible)
-            }
+        // 这里锁定显示与否交给 component 自己实现， BaseController 不处理
+        runWithAllComponents {
+            onVisibleChanged(isVisible)
         }
         onHandleVisibilityChanged(isVisible)
     }
@@ -400,11 +406,15 @@ open class BaseController:
     }
 
     override fun startFadeOut() {
+        Log.d("BaseController", "startFadeOut")
+        mIsFadeOut = true
         removeCallbacks(mHideRunnable)
         postDelayed(mHideRunnable, fadeOutTimeout)
     }
 
     override fun stopFadeOut() {
+        Log.d("BaseController", "stopFadeOut")
+        mIsFadeOut = false
         removeCallbacks(mHideRunnable)
     }
 
@@ -434,7 +444,10 @@ open class BaseController:
 
     override fun show() {
         if(!mIsShowing){
-            startFadeOut()
+            if(mIsFadeOut){
+                removeCallbacks(mHideRunnable)
+                postDelayed(mHideRunnable, fadeOutTimeout)
+            }
             handleVisibilityChanged(true)
             mIsShowing = true
         }
@@ -442,7 +455,7 @@ open class BaseController:
 
     override fun hide() {
         if(mIsShowing){
-            stopFadeOut()
+            removeCallbacks(mHideRunnable)
             handleVisibilityChanged(false)
             mIsShowing = false
         }

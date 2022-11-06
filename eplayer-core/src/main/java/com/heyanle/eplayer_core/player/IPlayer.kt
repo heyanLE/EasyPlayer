@@ -22,9 +22,9 @@ interface IPlayer {
 
     fun getBufferedPercentage(): Int
 
-    fun startFullScreen()
+    fun startFullScreen(changeScreen: Boolean = true)
 
-    fun stopFullScreen()
+    fun stopFullScreen(changeScreen: Boolean = true)
 
     fun isFullScreen(): Boolean
 

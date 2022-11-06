@@ -54,7 +54,6 @@
                 android:id="@+id/iv_fullscreen"
                 android:padding="10dp"
                 app:tint="@android:color/white"
-                android:src="@drawable/ic_baseline_fullscreen_24"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"/>
 
@@ -68,7 +67,7 @@
         android:id="@+id/iv_controller"
         android:padding="8dp"
         app:tint="@android:color/white"
-        android:src="@drawable/ic_baseline_play_arrow_24"
+
         android:background="@drawable/player_controller_bt_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"

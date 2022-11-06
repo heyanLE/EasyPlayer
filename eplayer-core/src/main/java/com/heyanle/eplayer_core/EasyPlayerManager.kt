@@ -17,7 +17,7 @@ object EasyPlayerManager {
     var enableOrientation: Boolean = true
     var enableAudioFocus: Boolean = true
 
-    var screenScaleType = ScreenScaleType.SCREEN_SCALE_DEFAULT
+    var screenScaleType = ScreenScaleType.SCREEN_SCALE_ORIGINAL
 
     var progressManager: ProgressManager = ProgressManager.ofDefault()
 
