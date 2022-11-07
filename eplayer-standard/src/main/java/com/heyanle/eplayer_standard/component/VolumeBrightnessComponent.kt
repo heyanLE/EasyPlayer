@@ -84,7 +84,7 @@ class VolumeBrightnessComponent: FrameLayout, IGestureComponent {
         super.onUp()
         binding.centerContainer.animate()
             .alpha(0f).setDuration(300).setListener(object: AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     binding.centerContainer.visibility = View.GONE
                 }
