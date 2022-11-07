@@ -432,12 +432,14 @@ open class BaseController:
     }
 
     override fun startProgressUpdate() {
+        Log.d("BaseController","startProgressUpdate")
         mIsStartProgress = true
         removeCallbacks(mUpdateProgressRunnable)
         post(mUpdateProgressRunnable)
     }
 
     override fun stopProgressUpdate() {
+        Log.d("BaseController","stopProgressUpdate")
         mIsStartProgress = false
         removeCallbacks(mUpdateProgressRunnable)
     }

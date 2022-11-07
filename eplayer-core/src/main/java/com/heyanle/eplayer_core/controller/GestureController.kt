@@ -5,12 +5,12 @@ import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import com.heyanle.eplayer_core.constant.EasyPlayStatus
 import com.heyanle.eplayer_core.constant.EasyPlayerStatus
-import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.utils.PlayUtils
 import kotlin.math.abs
 
@@ -56,7 +56,7 @@ open class GestureController: BaseController,
     private var mCurPlayState = 0
 
     // 整个视频区域从最左划到最右滑过的视频时间
-    var slideFullTime = 120000
+    var slideFullTime = 300000
     // 是否启动手势
     var isGestureEnabled = true
     // 是否启用滑动控制进度
@@ -147,8 +147,6 @@ open class GestureController: BaseController,
             || isEdge(e1)
         ) //处于屏幕边沿
             return true
-        val deltaX = e1.x - e2.x
-        val deltaY = e1.y - e2.y
         if (mFirstTouch) {
             mChangePosition = abs(distanceX) >= abs(distanceY)
             if (!mChangePosition) {
@@ -173,11 +171,11 @@ open class GestureController: BaseController,
 
         }
         if (mChangePosition) {
-            slideToChangePosition(deltaX)
+            slideToChangePosition(distanceX)
         } else if (mChangeBrightness) {
-            slideToChangeBrightness(deltaY)
+            slideToChangeBrightness(distanceY)
         } else if (mChangeVolume) {
-            slideToChangeVolume(deltaY)
+            slideToChangeVolume(distanceY)
         }
         return true
     }
@@ -258,12 +256,11 @@ open class GestureController: BaseController,
     }
 
     private fun slideToChangePosition(dx: Float) {
-        var deltaX = dx
-        deltaX = -deltaX
+        Log.d("GestureController", "$dx")
         val width = measuredWidth
         val duration = componentContainer?.getDuration()?:0L
         val currentPosition = componentContainer?.getCurrentPosition()?:0L
-        var position = (deltaX / width * slideFullTime + currentPosition).toLong()
+        var position = (-dx / width * slideFullTime + currentPosition).toLong()
         if (position > duration) position = duration
         if (position < 0) position = 0
 
@@ -324,7 +321,7 @@ open class GestureController: BaseController,
 
     // 是否在 控件边缘
     private fun isEdge(e: MotionEvent): Boolean{
-        val edgeSize = PlayUtils.dp2px(context, 40f)
+        val edgeSize = PlayUtils.dp2px(context, 20f)
         return e.x < edgeSize || e.x > width - edgeSize
                 ||e.y < edgeSize || e.y > height - edgeSize
     }

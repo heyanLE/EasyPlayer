@@ -5,10 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.SurfaceTexture
 import android.util.AttributeSet
-import android.view.Surface
-import android.view.TextureView
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.FrameLayout
 import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.utils.MeasureHelper
@@ -56,7 +53,9 @@ class TextureViewRender: TextureView, IRender, TextureView.SurfaceTextureListene
 
 
     override fun beforeAddToWindow(view: View, parent: FrameLayout) {
-
+        val params = (view.layoutParams as? FrameLayout.LayoutParams)?: FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        params.gravity = Gravity.CENTER
+        view.layoutParams = params
     }
 
     override fun screenShot(): Bitmap? {

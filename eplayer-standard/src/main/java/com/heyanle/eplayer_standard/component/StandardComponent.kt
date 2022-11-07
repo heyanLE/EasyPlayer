@@ -1,6 +1,7 @@
 package com.heyanle.eplayer_standard.component
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
@@ -89,6 +90,7 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
                 toggleLockState()
             }
         }
+        binding.seekBar.max = Int.MAX_VALUE
     }
 
     // == override IComponent
@@ -131,9 +133,7 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
                 binding.progressBar.visibility = View.VISIBLE
             }
             else -> {
-                runWithContainer {
-                    stopProgressUpdate()
-                }
+
             }
         }
     }
@@ -156,6 +156,7 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
     }
 
     override fun onProgressUpdate(duration: Long, position: Long) {
+        Log.d("StandardComponent", "onProgressUpdate dur->$duration pos->$position isProgressSlide->$isProgressSlide isSeekBarTouching->$isSeekBarTouching")
         if(!isProgressSlide && !isSeekBarTouching){
             refreshTimeUI(duration, position)
             setSeekbarProgress(duration, position)
@@ -216,7 +217,7 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
             binding.root.clearAnimation()
             binding.root.visibility = View.VISIBLE
             seekTo(slidePosition)
-            refreshTimeUI(getDuration(), slidePosition)
+            refreshTimeUI(duration, slidePosition)
             setSeekbarProgress(duration, slidePosition)
         }
     }
@@ -227,7 +228,6 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
         runWithContainer {
             startFadeOut()
             startProgressUpdate()
-
         }
     }
 
@@ -236,7 +236,7 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
         if(fromUser){
             runWithContainer {
-                val newPosition = getDuration()/1000 * seekBar.progress / seekBar.max
+                val newPosition = getDuration() * progress / seekBar.max
                 seekTo(newPosition)
                 refreshTimeUI(getDuration(), newPosition)
             }
@@ -256,7 +256,7 @@ class StandardComponent: FrameLayout, IGestureComponent, SeekBar.OnSeekBarChange
         runWithContainer {
             startFadeOut()
             startProgressUpdate()
-            val newPosition = getDuration()/1000 * seekBar.progress / seekBar.max
+            val newPosition = getDuration() * seekBar.progress / seekBar.max
             seekTo(newPosition)
         }
     }

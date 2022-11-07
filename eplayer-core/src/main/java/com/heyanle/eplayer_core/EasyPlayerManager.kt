@@ -1,5 +1,6 @@
 package com.heyanle.eplayer_core
 
+import android.graphics.Color
 import com.heyanle.eplayer_core.constant.ScreenScaleType
 import com.heyanle.eplayer_core.player.IPlayerEngineFactory
 import com.heyanle.eplayer_core.player.ProgressManager
@@ -17,7 +18,9 @@ object EasyPlayerManager {
     var enableOrientation: Boolean = true
     var enableAudioFocus: Boolean = true
 
-    var screenScaleType = ScreenScaleType.SCREEN_SCALE_ORIGINAL
+    var screenScaleType = ScreenScaleType.SCREEN_SCALE_DEFAULT
+
+    var backgroundColor: Int = Color.BLACK
 
     var progressManager: ProgressManager = ProgressManager.ofDefault()
 

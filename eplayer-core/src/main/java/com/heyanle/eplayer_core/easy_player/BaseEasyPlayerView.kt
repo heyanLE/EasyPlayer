@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.media.AudioManager
 import android.os.Parcelable
 import android.text.TextUtils
@@ -88,11 +89,14 @@ open class BaseEasyPlayerView:
 
     private var mIsFullScreen = false
 
+    private var videoBackgroundColor = EasyPlayerManager.backgroundColor
+
     init {
         realViewContainer.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
         addView(realViewContainer, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
         // realViewContainer.addView(renderContainer, 0, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT ))
         audioFocusHelper.setListener(this)
+
     }
 
     fun setDataSource(url: String, headers:  Map<String, String>? = null){
@@ -570,16 +574,19 @@ open class BaseEasyPlayerView:
             new.render.onRenderLoad(renderContainer, realViewContainer, getControllersSnapshot())
             renderContainer.addView(new.render.getView())
             new.playerEngine.init()
+            realViewContainer.setBackgroundColor(videoBackgroundColor)
         }
     }
 
     private fun findEnvironmentAndControllerFromChildren(){
-        val viewSet = HashSet<View>()
+        val viewList = ArrayList<View>()
         for(i in 0 until childCount){
-            viewSet.add(getChildAt(i))
-        }
-        viewSet.forEach { v ->
+            val v = getChildAt(i)
             Log.d("BaseEasyPlayer", "v -> ${v.toString()}")
+            viewList.add(v)
+        }
+        viewList.forEach { v ->
+
             when(v){
                 is PlayerEngineVConfig<*> -> {
                     environmentBuilder.playerEngineFactory = v.getFactory()

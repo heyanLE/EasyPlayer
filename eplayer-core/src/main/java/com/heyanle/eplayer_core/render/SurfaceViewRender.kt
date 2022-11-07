@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.util.AttributeSet
 import android.view.*
+import android.widget.FrameLayout
 import com.heyanle.eplayer_core.player.IPlayerEngine
 import com.heyanle.eplayer_core.render.IRender
 import com.heyanle.eplayer_core.utils.MeasureHelper
@@ -66,8 +67,12 @@ class SurfaceViewRender: SurfaceView, IRender, SurfaceHolder.Callback {
         }
     }
 
-    override fun beforeAddToWindow(view: View, parent: ViewGroup) {
-
+    override fun beforeAddToWindow(view: View, parent: FrameLayout) {
+        setZOrderOnTop(false)
+        setZOrderMediaOverlay(true)
+        val params = (view.layoutParams as? FrameLayout.LayoutParams)?: FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        params.gravity = Gravity.CENTER
+        view.layoutParams = params
     }
 
     override fun screenShot(): Bitmap? {
@@ -88,16 +93,10 @@ class SurfaceViewRender: SurfaceView, IRender, SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        val canvas = holder.lockCanvas()
-        canvas.drawColor(backgroundColor)
-        holder.unlockCanvasAndPost(canvas)
         easyPlayer?.setSurfaceHolder(holder)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        val canvas = holder.lockCanvas()
-        canvas.drawColor(backgroundColor)
-        holder.unlockCanvasAndPost(canvas)
         easyPlayer?.clearSurfaceHolder(holder)
     }
 

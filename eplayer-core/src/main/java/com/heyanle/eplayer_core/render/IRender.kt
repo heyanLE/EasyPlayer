@@ -35,8 +35,6 @@ interface IRender {
 
     }
 
-    fun setBackgroundColor(color: Int)
-
     fun beforeAddToWindow(view: View, parent: FrameLayout)
 
     fun screenShot(): Bitmap?
