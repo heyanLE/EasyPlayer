@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import com.heyanle.eplayer_core.constant.EasyPlayStatus
 import com.heyanle.eplayer_core.constant.EasyPlayerStatus
+import com.heyanle.eplayer_core.utils.FigureCounter
 import com.heyanle.eplayer_core.utils.PlayUtils
 import kotlin.math.abs
 
@@ -35,12 +36,6 @@ open class GestureController: BaseController,
     // 音乐控制器（用于获取和控制音量）
     private var mAudioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-    // 音量
-    private var mStreamVolume = 0
-
-    // 亮度
-    private var mBrightness = 0f
-
     // 滑动的进度
     private var mSeekPosition = -1L
 
@@ -54,6 +49,16 @@ open class GestureController: BaseController,
 
     // 当前播放状态
     private var mCurPlayState = 0
+
+    // 音量区滑动整个控件高度对应的音量
+    // 因为音量一般只有几格，因此这里按照比计算去尾后会有误差，滑动整个屏幕一般音量不会变化 volumeSlideFull
+    // 因此可以直接理解为滑动系数而不是整个控件高度占音量比
+    // 经测试，当设置为 2.0 时 一般滑动整个屏幕音量变化 接近 100%
+    var volumeSlideFull = 2.0f
+
+    // 亮度区滑动整个控件高度对应的亮度
+    // 同上，具有精度问题，这里为了体验设置为 1.2，效果中滑动整个屏幕可以保证亮度 0到 100 都可以设置到
+    var brightnessSlideFull = 1.2f
 
     // 整个视频区域从最左划到最右滑过的视频时间
     var slideFullTime = 300000
@@ -111,9 +116,18 @@ open class GestureController: BaseController,
             || isEdge(e)
         ) //处于屏幕边沿
             return true
-        mStreamVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        val activity: Activity = PlayUtils.findActivity(context) ?: return false
-        mBrightness = activity.window?.attributes?.screenBrightness ?: 0f
+
+        val act = PlayUtils.findActivity(context) ?: return false
+        oldBrightness = act.window.attributes.screenBrightness
+        oldVolumeInt = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+        // 音量只有几格，两次滑动事件的 deltaY 很小，一般一格都无法引起变化，导致拉不动
+        // 这里需要累计器
+        figureCounter.deltaSum = 0f
+        figureCounter.max = 1.0f
+        figureCounter.min = 0f
+        figureCounter.outMax = (mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * volumeSlideFull + 0.5f).toInt()
+        figureCounter.outMin = 0
         mFirstTouch = true
         mChangePosition = false
         mChangeBrightness = false
@@ -271,37 +285,51 @@ open class GestureController: BaseController,
         mSeekPosition = position
     }
 
+    private var oldBrightness = -1.0f
     private fun slideToChangeBrightness(deltaY: Float) {
         val activity: Activity = PlayUtils.findActivity(context) ?: return
         val window = activity.window
         val attributes = window.attributes
-        val height = measuredHeight
-        if (mBrightness == -1.0f) mBrightness = 0.5f
-        var brightness = deltaY * 2 / height + mBrightness
+
+        if (oldBrightness == -1.0f) oldBrightness = 0.5f
+
+        var brightness = deltaY / height * brightnessSlideFull + oldBrightness
         if (brightness < 0) {
             brightness = 0f
         }
         if (brightness > 1.0f) brightness = 1.0f
+        Log.d("GestureController", "slideToChangeBrightness deltaY->$deltaY old->$oldBrightness new->$brightness")
         val percent = (brightness * 100).toInt()
         attributes.screenBrightness = brightness
         window.attributes = attributes
+        oldBrightness = brightness
 
         runWithAllComponents {
             (this as? IGestureComponent)?.onBrightnessChange(percent)
         }
     }
-
+    private var oldVolumeInt = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+    private var figureCounter = FigureCounter()
     private fun slideToChangeVolume(deltaY: Float) {
-        val streamMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val height = measuredHeight
-        val deltaV = deltaY * 2 / height * streamMaxVolume
-        var index = mStreamVolume + deltaV
-        if (index > streamMaxVolume) index = streamMaxVolume.toFloat()
-        if (index < 0) index = 0f
-        val percent = (index / streamMaxVolume * 100).toInt()
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index.toInt(), 0)
+        val max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+
+        // 使用累计器
+        val deltaVolumeInt = figureCounter.add(deltaY/height)
+
+
+        var newVolumeInt = oldVolumeInt + deltaVolumeInt
+
+
+        newVolumeInt = 0.coerceAtLeast(newVolumeInt)
+        newVolumeInt = max.coerceAtMost(newVolumeInt)
+        Log.d("GestureController", "slideToChangeVolume deltaY->$deltaY deltaVolumeInt->$deltaVolumeInt old->$oldVolumeInt new->$newVolumeInt")
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolumeInt, 0)
+        oldVolumeInt = newVolumeInt
+        val percent = (newVolumeInt / max.toFloat() * 100).toInt()
         runWithAllComponents {
-            (this as? IGestureComponent)?.onVolumeChange(percent)
+            if(this is IGestureComponent){
+                onVolumeChange(percent)
+            }
         }
     }
 

@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo
 import android.util.AttributeSet
 import android.util.Log
 import android.view.OrientationEventListener
+import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import com.heyanle.eplayer_core.EasyPlayerManager
@@ -231,13 +232,20 @@ open class BaseController:
 
     // 注册 子 View 组件，在 onFinishInflate 调用
     private fun addComponentsByChildren(){
+        val viewList = arrayListOf<View>()
         for(i in 0 until childCount){
             val v = getChildAt(i)
+            viewList.add(v)
+        }
+        for(i in 0 until viewList.size){
+            val v = viewList[i]
             val cg = (v as? IComponentGetter)?:continue
+            Log.d("BaseController", "addComponentsByChildren $v")
             removeView(v)
             // 虽然传入 true，但是会触发安全检查，
             // 不会最终 add view，但是在 remove 时会 remove
             addComponents(true, cg.getComponent())
+
         }
     }
 

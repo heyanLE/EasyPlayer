@@ -20,7 +20,7 @@ class TestActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        binding.playerView.setDataSource("https://yun.ssdm.cc/SBDM/BocchitheRock04.m3u8")
+        binding.playerView.setDataSource("https://yun.ssdm.cc/SBDM/BocchitheRock03.m3u8")
         binding.playerView.start()
     //.playerView.start()
     }

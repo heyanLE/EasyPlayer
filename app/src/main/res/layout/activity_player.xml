@@ -29,6 +29,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
+            <com.heyanle.eplayer_standard.component.VolumeBrightnessComponent
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
 
         </com.heyanle.eplayer_core.controller.GestureController>
 
