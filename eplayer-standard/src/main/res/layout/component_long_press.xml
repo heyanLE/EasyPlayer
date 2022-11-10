@@ -6,7 +6,7 @@
     android:layout_gravity="center_horizontal|top"
     android:layout_width="160dp"
     android:textColor="@android:color/white"
-    android:text="加速播放中"
+    android:text="@string/play_speeding_up"
     android:gravity="center"
     android:layout_height="32dp"
     android:background="#96000000"

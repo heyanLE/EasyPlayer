@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:visibility="gone"
+    tools:visibility="visible"
     android:id="@+id/center_container"
     android:layout_width="160dp"
     android:layout_height="120dp"
