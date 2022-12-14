@@ -57,7 +57,10 @@ class VolumeBrightnessComponent: FrameLayout, IGestureComponent {
             hide()
         }
         binding.ivIcon.setImageResource(R.drawable.ic_baseline_brightness_6_24)
-        binding.tvPercent.text = "$percent%"
+        binding.tvPercent.text = buildString {
+        append(percent)
+        append("%")
+    }
         binding.pbPercent.progress = percent
     }
 
@@ -76,7 +79,10 @@ class VolumeBrightnessComponent: FrameLayout, IGestureComponent {
         }else {
             binding.ivIcon.setImageResource(R.drawable.ic_baseline_volume_up_24)
         }
-        binding.tvPercent.text = "$percent%"
+        binding.tvPercent.text = buildString {
+        append(percent)
+        append("%")
+    }
         binding.pbPercent.progress = percent
     }
 
